@@ -1,0 +1,25 @@
+{
+  "domain": "hacs_lukeroberts",
+  "name": "Luke Roberts",
+  "codeowners": [
+    "@tpulatha"
+  ],
+  "config_flow": true,
+  "documentation": "https://github.com/tpulatha/hacs_lukeroberts",
+  "iot_class": "local_polling",
+  "issue_tracker": "https://github.com/tpulatha/hacs_lukeroberts/issues",
+  "version": "0.1.0",
+  "integration_type": "hub",
+  "dependencies": [
+    "bluetooth_adapters"
+  ],
+  "requirements": [
+    "bluetooth-data-tools==1.20.0",
+    "pylukeroberts==0.1.0"
+  ],
+  "bluetooth": [
+    {
+      "service_uuid": "44092840-0567-11e6-b862-0002a5d5c51b"
+    }
+  ]
+}

@@ -2,26 +2,31 @@
 
 from __future__ import annotations
 
-from typing import Any
+import logging
+from typing import TYPE_CHECKING, Any, ClassVar
 
 from homeassistant.components.light import (
     ColorMode,
     LightEntity,
-    LightEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
-from pylukeroberts import LUVOLAMP
 
 from .const import DOMAIN
-from .models import LEDBLEData, LUVOLAMPData
+from .coordinator import LukeRobertsBTCoordinator
+
+if TYPE_CHECKING:
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+    from pylukeroberts import LUVOLAMP
+
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -30,30 +35,34 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the light platform for Luvo Lamp."""
-    data: LUVOLAMPData = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities([LUVOLAMPEntity(data.coordinator, data.device, entry.title)])
+    coordinator = hass.data[DOMAIN][entry.entry_id]
+    async_add_entities([LUVOLAMPEntity(coordinator, coordinator.device, entry.title)])
 
 
+# class LUVOLAMPEntity(BluetoothCoordinatorEntity[LukeRobertsBTCoordinator], LightEntity):
 class LUVOLAMPEntity(CoordinatorEntity[DataUpdateCoordinator[None]], LightEntity):
     """Representation of Luvo Lamp device."""
 
-    _attr_supported_color_modes = {ColorMode.ONOFF}
-    _attr_has_entity_name = True
-    _attr_name = None
+    _attr_supported_color_modes: ClassVar[set[ColorMode]] = {
+        ColorMode.ONOFF,
+        ColorMode.BRIGHTNESS,
+        ColorMode.RGB,
+    }
+    _attr_has_entity_name: ClassVar[bool] = True
+    _attr_name: ClassVar[str | None] = None
     # _attr_supported_features = LightEntityFeature.EFFECT
 
     def __init__(
-        self, coordinator: DataUpdateCoordinator[None], device: LUVOLAMP, name: str
+        self, coordinator: LukeRobertsBTCoordinator, device: LUVOLAMP, name: str
     ) -> None:
         """Initialize an Luvo Lamp."""
         super().__init__(coordinator)
         self._device = device
-        self._attr_unique_id = device.address
+        self._attr_unique_id = coordinator.address
         self._attr_device_info = DeviceInfo(
             name=name,
-            model=f"{device.model_data.description} {hex(device.model_num)}",
-            sw_version=hex(device.version_num),
-            connections={(dr.CONNECTION_BLUETOOTH, device.address)},
+            model="Luke Roberts Lamp",
+            connections={(dr.CONNECTION_BLUETOOTH, coordinator.address)},
         )
         self._async_update_attrs()
 
@@ -62,11 +71,11 @@ class LUVOLAMPEntity(CoordinatorEntity[DataUpdateCoordinator[None]], LightEntity
         """Handle updating _attr values."""
         device = self._device
         self._attr_color_mode = ColorMode.ONOFF
-        # self._attr_brightness = device.brightness
-        # self._attr_rgb_color = device.rgb_unscaled
-        self._attr_is_on = device.on
-        # self._attr_effect = device.effect
-        # self._attr_effect_list = device.effect_list
+        self._attr_brightness = device.brightness
+        self._attr_rgb_color = device.rgb_unscaled
+        self._attr_is_on = device._isOn
+        self._attr_effect = device.effect
+        self._attr_effect_list = device.effect_list
 
     # async def _async_set_effect(self, effect: str, brightness: int) -> None:
     #     """Set an effect."""
@@ -82,6 +91,9 @@ class LUVOLAMPEntity(CoordinatorEntity[DataUpdateCoordinator[None]], LightEntity
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
+        _LOGGER.warning(
+            f"Turning off device with address: {self._device._ble_device.address}"
+        )
         await self._device.switch_off()
 
     @callback

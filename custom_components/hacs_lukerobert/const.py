@@ -4,5 +4,5 @@ from logging import Logger, getLogger
 
 LOGGER: Logger = getLogger(__package__)
 
-DOMAIN = "hacs_lukerobert"
+DOMAIN = "hacs_lukeroberts"
 DEVICE_STARTUP_TIMEOUT_SECONDS = 30

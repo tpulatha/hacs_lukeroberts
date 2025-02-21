@@ -5,16 +5,19 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import logging
+from typing import TYPE_CHECKING
 
-from bleak.backends.device import BLEDevice
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth.active_update_coordinator import (
     ActiveBluetoothDataUpdateCoordinator,
 )
 from homeassistant.core import CoreState, HomeAssistant, callback
-from pylukeroberts import LUVOLAMP
 
 from .const import DEVICE_STARTUP_TIMEOUT_SECONDS, DOMAIN
+
+if TYPE_CHECKING:
+    from bleak.backends.device import BLEDevice
+    from pylukeroberts import LUVOLAMP
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,6 +51,12 @@ class LukeRobertsBTCoordinator(ActiveBluetoothDataUpdateCoordinator[None]):
         self.base_unique_id = base_unique_id
         self._ready_event = asyncio.Event()
         self._was_unavailable = True
+        self._last_update_success = True
+
+    @property
+    def last_update_success(self) -> bool:
+        """Return the last update success."""
+        return self._last_update_success
 
     @callback
     def _needs_poll(
@@ -98,7 +107,7 @@ class LukeRobertsBTCoordinator(ActiveBluetoothDataUpdateCoordinator[None]):
             return
 
         self._was_unavailable = False
-        self.device.update_from_advertisement(service_info.advertisement)
+        # self.device.update_from_advertisement(service_info.advertisement)
         super()._async_handle_bluetooth_event(service_info, change)
 
     async def async_wait_ready(self) -> bool:

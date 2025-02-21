@@ -14,7 +14,6 @@
     "bluetooth_adapters"
   ],
   "requirements": [
-    "bluetooth-data-tools==1.20.0",
     "pylukeroberts==0.1.5"
   ],
   "bluetooth": [

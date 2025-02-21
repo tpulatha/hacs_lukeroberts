@@ -7,10 +7,10 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ADDRESS, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from pylukeroberts import LUVOLAMP
 
 from .const import DOMAIN
 from .coordinator import LukeRobertsBTCoordinator
-from pylukeroberts import LUVOLAMP
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -19,15 +19,17 @@ PLATFORMS = [Platform.LIGHT]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Luke Roberts Luvo Light from a config entry."""
-    assert entry.unique_id is not None
     hass.data.setdefault(DOMAIN, {})
     address: str = entry.data[CONF_ADDRESS]
     ble_device = bluetooth.async_ble_device_from_address(hass, address.upper(), True)
     if not ble_device:
         error_msg = f"Could not find Generic BT Device with address {address}"
         raise ConfigEntryNotReady(error_msg)
-    device = LukeRobertsBTCoordinator(ble_device)
 
+    # Create the LUVOLAMP device first
+    _LOGGER.warning(f"Created device {ble_device.address}")
+    device = LUVOLAMP(ble_device)
+    _LOGGER.warning(f"Created lamp {device._ble_device.address}")
     coordinator = hass.data[DOMAIN][entry.entry_id] = LukeRobertsBTCoordinator(
         hass, _LOGGER, ble_device, device, entry.title, entry.unique_id, True
     )

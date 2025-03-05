@@ -25,7 +25,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if not ble_device:
         error_msg = f"Could not find Generic BT Device with address {address}"
         raise ConfigEntryNotReady(error_msg)
-
     # Create the LUVOLAMP device first
     _LOGGER.warning(f"Created device {ble_device.address}")
     device = LUVOLAMP(ble_device)

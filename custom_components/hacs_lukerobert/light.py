@@ -102,9 +102,9 @@ class LUVOLAMPEntity(CoordinatorEntity[DataUpdateCoordinator[None]], LightEntity
         self._async_update_attrs()
         self.async_write_ha_state()
 
-    async def async_added_to_hass(self) -> None:
-        """Register callbacks."""
-        self.async_on_remove(
-            self._device.register_callback(self._handle_coordinator_update)
-        )
-        return await super().async_added_to_hass()
+    # async def async_added_to_hass(self) -> None:
+    #     """Register callbacks."""
+    #     self.async_on_remove(
+    #         self._device.register_callback(self._handle_coordinator_update)
+    #     )
+    #     return await super().async_added_to_hass()
